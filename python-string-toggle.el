@@ -2,7 +2,7 @@
 
 ;; Author: Andrew Peck
 ;; Version: 0.2.0
-;; Package-Requires: ((emacs "29.1"))
+;; Package-Requires: ((emacs "30.1"))
 ;; Keywords: languages, python, convenience
 ;; URL: https://github.com/andrewpeck/python-string-toggle
 
