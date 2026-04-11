@@ -18,8 +18,6 @@
 Point is at `point-min' after insertion."
   (declare (indent 1))
   `(with-temp-buffer
-     (unless (treesit-language-available-p 'python)
-       (ert-skip "Python tree-sitter grammar unavailable"))
      (insert ,content)
      (goto-char (point-min))
      (python-ts-mode)
