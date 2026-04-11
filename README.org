@@ -1,5 +1,7 @@
 Toggle Python strings at point between triple-quoted and implicit concatenation forms.
 
+Disclaimer: this package is largely AI written. It was created to solve a very specific problem and did that well.
+
 * Overview
 
 Two representations are supported:
