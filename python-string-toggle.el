@@ -313,3 +313,4 @@ This command only supports `python-ts-mode'."
 
 (provide 'python-string-toggle)
 ;;; python-string-toggle.el ends here
+;; LocalWords: infos unescapes
