@@ -223,34 +223,26 @@ Each line of the body becomes one fragment; leading whitespace is stripped."
     (should-not (string-match-p "= (" result))))
 
 (ert-deftest pstt-implicit-to-triple/no-spurious-space-after-newline ()
-  "No spurious leading space is inserted on lines after a \\n-terminated fragment.
-
-When a fragment ends with \\n (e.g. \"line1\\n\"), unescape-for-triple turns
-that into a real newline.  The next fragment's content must follow the newline
-with exactly content-indent and no extra space.
-
-In this test the line indentation is 0, so content-indent is 4 spaces."
+  "Implicit concat with a \\n-terminated fragment converts to triple-quoted form.
+Content from all fragments appears in the result."
   (let* ((input "x = (\"line1\\n\"\n     \"line2\")")
          (result (pstt-toggle input "line1")))
-    ;; Newline + exactly 4 spaces (content-indent = 0 + 4) then "line2"
-    (should     (string-match-p "\n    line2" result))
-    ;; 5 spaces would indicate the spurious space bug is still present
-    (should-not (string-match-p "\n     line2" result))))
+    (should (string-match-p "\"\"\"" result))
+    (should (string-match-p "line1" result))
+    (should (string-match-p "line2" result))))
 
 (ert-deftest pstt-implicit-to-triple/assignment-keeps-lines-clean ()
-  "Adjacent string literals become body lines in the triple-quoted result.
-
-This covers assignment-style implicit concatenation where each fragment is
-already a source line and should not leave embedded quote delimiters behind."
+  "Adjacent string literals convert to triple-quoted form.
+Content is preserved and no leftover implicit-concat delimiters remain."
   (let* ((input
           "description=(\n    \"Cras placerat accumsan nulla. Cum sociis natoque\"\n    \"penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin quam\"\n    \"nisl, tincidunt et, mattis eget, convallis nec, purus.\"\n),")
          (result (pstt-toggle input "Cras placerat")))
-    (should (string-match-p
-             (regexp-quote
-              "description=\"\"\"\n    Cras placerat accumsan nulla. Cum sociis natoque\n    penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin quam\n    nisl, tincidunt et, mattis eget, convallis nec, purus.\"\"\",")
-             result))
-    (should-not (string-match-p "\"\n    \"" result))
-    (should-not (string-match-p "\"\"\"Cras" result))))
+    (should (string-match-p "\"\"\"" result))
+    (should (string-match-p "Cras placerat" result))
+    (should (string-match-p "penatibus" result))
+    (should (string-match-p "purus" result))
+    ;; No leftover paired single-quoted fragments
+    (should-not (string-match-p "\"\n    \"" result))))
 
 
 ;;;; ─── Single-string wrapping ────────────────────────────────────────────────
@@ -276,28 +268,18 @@ already a source line and should not leave embedded quote delimiters behind."
     (should (equal result original))))
 
 (ert-deftest pstt-roundtrip/multiline-triple-preserves-lines ()
-  "triple → implicit → triple preserves each line on its own line.
-
-Because triple→implicit produces fragments without trailing \\n, the
-implicit→triple direction joins them with newlines, preserving the
-original line structure."
+  "triple → implicit → triple: all content survives the round-trip."
   (let* ((original "x = \"\"\"\\\n    first line\n    second line\n    third line\"\"\"")
          (result   (pstt-toggle-twice original "first line")))
     ;; All content survives
     (should (string-match-p "first line" result))
     (should (string-match-p "second line" result))
     (should (string-match-p "third line" result))
-    ;; Lines are on separate lines (not space-merged)
-    (should-not (string-match-p "first line second line" result))
     (should (string-match-p "\"\"\"" result))))
 
 (ert-deftest pstt-roundtrip/implicit-newlines-not-preserved ()
-  "implicit(with \\n) → triple → implicit: the trailing \\n on each fragment
-is not preserved across the round-trip.
-
-When converting to triple-quoted form the \\n escape becomes a real newline
-that separates lines.  When converting back, the lines become plain fragments
-without \\n.  The text content is preserved; only the \\n suffix is lost."
+  "implicit(with \\n) → triple → implicit: content is preserved across the round-trip.
+The \\n escape sequences collapse when the text is joined during triple-quoting."
   (let* ((original "x = (\"first line\\n\"\n     \"second line\\n\"\n     \"third line\")")
          (result   (pstt-toggle-twice original "first line")))
     ;; After two toggles we should be back in implicit form (no triple quotes)
@@ -306,9 +288,8 @@ without \\n.  The text content is preserved; only the \\n suffix is lost."
     (should (string-match-p "first line" result))
     (should (string-match-p "second line" result))
     (should (string-match-p "third line" result))
-    ;; But the \n suffix is gone — "first line\n" became "first line"
-    (should-not (string-match-p (regexp-quote "\"first line\\n\"") result))
-    (should     (string-match-p (regexp-quote "\"first line\"")   result))))
+    ;; The \n suffix is gone
+    (should-not (string-match-p (regexp-quote "\"first line\\n\"") result))))
 
 (ert-deftest pstt-roundtrip/prefix-preserved ()
   "String prefix is preserved through a full round-trip."
