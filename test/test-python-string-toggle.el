@@ -9,7 +9,8 @@
 (require 'treesit)
 (require 'python-string-toggle)
 
-(add-to-list 'treesit-extra-load-path "./")
+(add-to-list 'treesit-extra-load-path
+             (file-name-directory (or load-file-name buffer-file-name)))
 
 ;;;; ─── Helpers ────────────────────────────────────────────────────────────────
 
